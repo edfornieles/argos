@@ -40,12 +40,31 @@ export function AgentInspector({ agent, logs }: AgentInspectorProps) {
     }));
   };
 
+  // Function to categorize memories by time
+  const categorizeMemories = (memories: any[]) => {
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
+    const oneDay = 24 * oneHour;
+
+    return {
+      shortTerm: memories.filter(m => now - m.timestamp < oneHour),
+      midTerm: memories.filter(m => now - m.timestamp >= oneHour && now - m.timestamp < oneDay),
+      longTerm: memories.filter(m => now - m.timestamp >= oneDay)
+    };
+  };
+
   if (!agent) return null;
 
   const recentStates = getAgentState(agent.id);
   const latestAppearance = recentStates.find(
     (state) => state.type === "appearance"
   )?.content;
+
+  // Get memories from agent state
+  const experiences = agent.memory?.experiences || [];
+  const perceptions = agent.memory?.perceptions || [];
+  const allMemories = [...experiences, ...perceptions];
+  const categorizedMemories = categorizeMemories(allMemories);
 
   return (
     <div className="h-full flex flex-col">
@@ -71,37 +90,21 @@ export function AgentInspector({ agent, logs }: AgentInspectorProps) {
 
         {/* Agent Appearance */}
         <div className="p-2 border-b border-cyan-900/30">
-          <div className="text-xs text-gray-500 mb-1 flex items-center justify-between">
-            <span>Appearance</span>
-            {agent.lastUpdate && (
-              <span className="text-emerald-400 text-[10px]">
-                {Math.round((Date.now() - agent.lastUpdate) / 1000)}s ago
-              </span>
-            )}
-          </div>
+          <div className="text-xs text-gray-500 mb-1">Appearance</div>
           <div className="text-sm text-cyan-400">
-            {latestAppearance && <div>{renderContent(latestAppearance)}</div>}
+            {agent.appearance.description || "No appearance data"}
           </div>
         </div>
 
-        {/* Current State */}
+        {/* Agent State */}
         <div className="p-2 border-b border-cyan-900/30">
           <div className="text-xs text-gray-500 mb-1">State</div>
-          <div className="text-sm">
-            <div className="flex items-center gap-2">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  agent.active ? "bg-emerald-400" : "bg-red-400"
-                }`}
-              />
-              <span className="text-cyan-400">
-                {agent.active ? "Active" : "Inactive"}
-              </span>
-            </div>
+          <div className="text-sm text-cyan-400">
+            {agent.active ? "Active" : "Inactive"}
           </div>
         </div>
 
-        {/* Goals and Plans */}
+        {/* Goals & Plans */}
         <div className="p-2 border-b border-cyan-900/30">
           <div className="text-xs text-gray-500 mb-1">Goals & Plans</div>
           <div className="space-y-2">
@@ -109,50 +112,74 @@ export function AgentInspector({ agent, logs }: AgentInspectorProps) {
               <div key={goal.id} className="mb-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-emerald-400">{goal.description}</span>
-                  <span
-                    className={`text-xs ${
-                      goal.status === "completed"
-                        ? "text-green-400"
-                        : goal.status === "failed"
-                        ? "text-red-400"
-                        : goal.status === "in_progress"
-                        ? "text-yellow-400"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {goal.status} ({Math.round(goal.progress)}%)
+                  <span className="text-xs text-gray-400">
+                    active ({Math.round(goal.progress)}%)
                   </span>
                 </div>
-                {agent.activePlans
-                  ?.filter((plan) => plan.goalId === goal.id)
-                  .map((plan) => (
-                    <div key={plan.id} className="ml-4 mt-1">
-                      <div className="text-xs text-cyan-400">
-                        Plan: {plan.id}
-                      </div>
-                      <div className="space-y-1 ml-2">
-                        {plan.steps.map((step) => (
-                          <div key={step.id} className="text-xs">
-                            <span
-                              className={`${
-                                step.status === "completed"
-                                  ? "text-green-400"
-                                  : step.status === "failed"
-                                  ? "text-red-400"
-                                  : step.status === "in_progress"
-                                  ? "text-yellow-400"
-                                  : "text-gray-400"
-                              }`}
-                            >
-                              • {step.description}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Memory Sections */}
+        <div className="p-2 border-b border-cyan-900/30">
+          <div className="text-xs text-gray-500 mb-1">Memories</div>
+          
+          {/* Short-term Memories */}
+          <div className="mb-4">
+            <div className="text-xs text-emerald-400 mb-1">Short-term (Last Hour)</div>
+            {categorizedMemories.shortTerm.length > 0 ? (
+              <div className="space-y-2">
+                {categorizedMemories.shortTerm.map((memory, index) => (
+                  <div key={index} className="text-sm text-cyan-400">
+                    • {memory.content}
+                    <div className="text-xs text-gray-500">
+                      {new Date(memory.timestamp).toLocaleTimeString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">No recent memories</div>
+            )}
+          </div>
+
+          {/* Mid-term Memories */}
+          <div className="mb-4">
+            <div className="text-xs text-emerald-400 mb-1">Mid-term (Last 24 Hours)</div>
+            {categorizedMemories.midTerm.length > 0 ? (
+              <div className="space-y-2">
+                {categorizedMemories.midTerm.map((memory, index) => (
+                  <div key={index} className="text-sm text-cyan-400">
+                    • {memory.content}
+                    <div className="text-xs text-gray-500">
+                      {new Date(memory.timestamp).toLocaleTimeString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">No mid-term memories</div>
+            )}
+          </div>
+
+          {/* Long-term Memories */}
+          <div className="mb-4">
+            <div className="text-xs text-emerald-400 mb-1">Long-term (Older)</div>
+            {categorizedMemories.longTerm.length > 0 ? (
+              <div className="space-y-2">
+                {categorizedMemories.longTerm.map((memory, index) => (
+                  <div key={index} className="text-sm text-cyan-400">
+                    • {memory.content}
+                    <div className="text-xs text-gray-500">
+                      {new Date(memory.timestamp).toLocaleTimeString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">No long-term memories</div>
+            )}
           </div>
         </div>
 
@@ -160,8 +187,8 @@ export function AgentInspector({ agent, logs }: AgentInspectorProps) {
         <div className="p-2">
           <div className="text-xs text-gray-500 mb-1">Recent Activity</div>
           <div className="space-y-2">
-            {recentStates.map((state, i) => (
-              <div key={i} className="text-sm">
+            {recentStates.map((state, index) => (
+              <div key={index} className="text-sm">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>{new Date(state.timestamp).toLocaleTimeString()}</span>
                   <span className="text-emerald-400">{state.type}</span>
@@ -171,7 +198,6 @@ export function AgentInspector({ agent, logs }: AgentInspectorProps) {
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
         </div>
       </div>

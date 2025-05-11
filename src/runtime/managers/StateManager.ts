@@ -144,6 +144,13 @@ export class StateManager implements IStateManager {
           updatedAt: Date.now(),
           metadata: {},
         })),
+      memory: {
+        thoughts: Memory.thoughts[eid] || [],
+        experiences: Memory.experiences[eid] || [],
+        perceptions: Memory.perceptions[eid] || [],
+        lastThought: Memory.lastThought[eid],
+        lastUpdate: Memory.lastUpdate[eid]
+      }
     };
   }
 

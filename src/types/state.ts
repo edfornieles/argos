@@ -125,4 +125,22 @@ export interface AgentState {
     currentAction?: string;
     socialCues?: string;
   };
+  memory?: {
+    thoughts: string[];
+    experiences: Array<{
+      type: string;
+      content: string;
+      timestamp: number;
+      queries?: string[];
+      data?: Record<string, any>;
+    }>;
+    perceptions: Array<{
+      timestamp: number;
+      content: string;
+      category: "speech" | "action" | "observation" | "thought";
+    }>;
+    lastThought: string;
+    lastUpdate: number;
+  };
+  lastUpdate?: number;
 }
