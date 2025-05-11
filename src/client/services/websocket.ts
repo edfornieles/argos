@@ -2,7 +2,10 @@ import {
   ServerMessage,
   ClientMessage,
   ConnectionUpdateMessage,
-} from "../../types";
+  MessageType,
+  DeleteMemoryMessage,
+  DeleteContextMessage
+} from "../../types/messages";
 import { useSimulationStore } from "../../state/simulation";
 
 export class WebSocketService {
@@ -349,5 +352,25 @@ export class WebSocketService {
 
     this.lastMessageTimes.set(key, now);
     return false;
+  }
+
+  sendMessage(message: DeleteMemoryMessage | DeleteContextMessage) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      if (message.type === "DELETE_MEMORY") {
+        const clientMessage: DeleteMemoryMessage = {
+          type: "DELETE_MEMORY",
+          data: message.data,
+          timestamp: Date.now(),
+        };
+        this.send(clientMessage);
+      } else {
+        const clientMessage: DeleteContextMessage = {
+          type: "DELETE_CONTEXT",
+          data: message.data,
+          timestamp: Date.now(),
+        };
+        this.send(clientMessage);
+      }
+    }
   }
 }

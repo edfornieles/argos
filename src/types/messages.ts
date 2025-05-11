@@ -16,7 +16,9 @@ export type MessageType =
   | "UNSUBSCRIBE_ROOM"
   | "SUBSCRIBE_AGENT"
   | "UNSUBSCRIBE_AGENT"
-  | "CONNECTION_UPDATE";
+  | "CONNECTION_UPDATE"
+  | "DELETE_MEMORY"
+  | "DELETE_CONTEXT";
 
 // Base Message Structure
 export interface BaseMessage {
@@ -96,6 +98,25 @@ export interface SubscriptionMessage extends BaseMessage {
   agentId?: string;
 }
 
+// Delete Memory Message
+export interface DeleteMemoryMessage extends BaseMessage {
+  type: "DELETE_MEMORY";
+  data: {
+    agentId: string;
+    memoryIndex: number;
+    memoryType: 'experience' | 'perception';
+  };
+}
+
+// Delete Context Message
+export interface DeleteContextMessage extends BaseMessage {
+  type: "DELETE_CONTEXT";
+  data: {
+    agentId: string;
+    contextIndex: number;
+  };
+}
+
 // All Message Types
 export type ServerMessage =
   | WorldUpdateMessage
@@ -105,4 +126,9 @@ export type ServerMessage =
   | AgentUpdateMessage
   | ConnectionUpdateMessage;
 
-export type ClientMessage = SubscriptionMessage | ChatMessage | ControlMessage;
+export type ClientMessage = 
+  | SubscriptionMessage 
+  | ChatMessage 
+  | ControlMessage 
+  | DeleteMemoryMessage 
+  | DeleteContextMessage;

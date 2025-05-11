@@ -6,6 +6,7 @@ interface CommandBarProps {
   isConnected: boolean;
   onCommand: (type: string) => void;
   agents: AgentState[];
+  onCharacterSelect: (agentId: string) => void;
 }
 
 export function CommandBar({
@@ -13,6 +14,7 @@ export function CommandBar({
   isConnected,
   onCommand,
   agents,
+  onCharacterSelect,
 }: CommandBarProps) {
   const [elapsedTime, setElapsedTime] = React.useState(0);
 
@@ -49,51 +51,25 @@ export function CommandBar({
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => onCommand(isRunning ? "STOP" : "START")}
-            disabled={!isConnected}
-            className={`px-3 py-1 rounded font-mono text-sm transition-all duration-300 ${
-              !isConnected
-                ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                : isRunning
-                ? "bg-black/30 text-yellow-400 border border-yellow-900/50 hover:bg-yellow-900/20 hover:border-yellow-700/50"
-                : "bg-black/30 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-900/20 hover:border-emerald-700/50"
-            } ${isRunning ? "animate-pulse" : ""}`}
+            onClick={() => onCommand("START")}
+            disabled={!isConnected || isRunning}
+            className="px-2 py-1 text-xs rounded bg-emerald-900/50 text-emerald-400 hover:bg-emerald-900/70 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="inline-flex items-center gap-2">
-              {isRunning ? (
-                <>
-                  <span className="w-2 h-2 bg-yellow-400 rounded-sm"></span>
-                  <span>PAUSE</span>
-                </>
-              ) : (
-                <>
-                  <span className="w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[10px] border-emerald-400"></span>
-                  <span>START</span>
-                </>
-              )}
-            </span>
+            Start
           </button>
           <button
             onClick={() => onCommand("STOP")}
-            disabled={!isConnected}
-            className={`px-3 py-1 rounded font-mono text-sm ${
-              !isConnected
-                ? "bg-gray-800 text-gray-600"
-                : "bg-black/30 text-red-400 border border-red-900/50"
-            }`}
+            disabled={!isConnected || !isRunning}
+            className="px-2 py-1 text-xs rounded bg-red-900/50 text-red-400 hover:bg-red-900/70 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ◼ STOP
+            Stop
           </button>
           <button
             onClick={() => onCommand("RESET")}
             disabled={!isConnected}
-            className={`px-3 py-1 rounded font-mono text-sm ${
-              !isConnected
-                ? "bg-gray-800 text-gray-600"
-                : "bg-black/30 text-orange-400 border border-orange-900/50"
-            }`}
+            className="px-2 py-1 text-xs rounded bg-cyan-900/50 text-cyan-400 hover:bg-cyan-900/70 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            ⟲ RESET
+            Reset
           </button>
         </div>
 
@@ -139,9 +115,26 @@ export function CommandBar({
         </div>
         <div
           className={`w-2 h-2 rounded-full ${
-            isConnected ? "bg-emerald-400 animate-pulse" : "bg-red-500"
+            isConnected ? "bg-emerald-400" : "bg-red-400"
           }`}
         />
+        <span className="text-xs text-gray-400">
+          {isConnected ? "Connected" : "Disconnected"}
+        </span>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <select
+          onChange={(e) => onCharacterSelect(e.target.value)}
+          className="px-2 py-1 text-xs rounded bg-gray-800/50 text-gray-400 border border-gray-700/50 focus:outline-none focus:border-cyan-500/50"
+        >
+          <option value="">Select Character</option>
+          {agents.map((agent) => (
+            <option key={agent.id} value={agent.id}>
+              {agent.name}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

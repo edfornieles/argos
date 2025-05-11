@@ -6,6 +6,7 @@ import { AgentNetwork } from "./components/AgentNetwork";
 import { ChatInterface } from "./components/ChatInterface";
 import { Inspector } from "./components/Inspector";
 import { Timeline } from "./components/Timeline";
+import { CharacterDetails } from "./components/CharacterDetails";
 import {
   AgentState,
   AgentUpdateMessage,
@@ -19,6 +20,7 @@ import "./styles/panels.css";
 
 export function ModernUI() {
   const [isConnected, setIsConnected] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const wsRef = React.useRef<WebSocketService>();
   const {
     agents,
@@ -147,10 +149,12 @@ export function ModernUI() {
     wsRef.current.subscribeToRoom(selectedRoom);
 
     // Subscribe to agents in the room
-    const roomAgents = agents.filter((a) => a.roomId === selectedRoom);
-    roomAgents.forEach((agent) => {
-      wsRef.current?.subscribeToRoomAgent(agent.id, selectedRoom);
-    });
+    const room = rooms.find(r => r.id === selectedRoom);
+    if (room?.occupants) {
+      room.occupants.forEach(occupant => {
+        wsRef.current?.subscribeToRoomAgent(occupant.id, selectedRoom);
+      });
+    }
 
     return () => {
       wsRef.current?.unsubscribeFromRoom(selectedRoom);
@@ -186,6 +190,31 @@ export function ModernUI() {
     }
   };
 
+  const handleDeleteMemory = (agentId: string, memoryIndex: number, type: 'experience' | 'perception') => {
+    if (!wsRef.current || !isConnected) return;
+    
+    wsRef.current.sendMessage({
+      type: 'DELETE_MEMORY',
+      data: {
+        agentId,
+        memoryIndex,
+        memoryType: type
+      }
+    });
+  };
+
+  const handleDeleteContext = (agentId: string, contextIndex: number) => {
+    if (!wsRef.current || !isConnected) return;
+    
+    wsRef.current.sendMessage({
+      type: 'DELETE_CONTEXT',
+      data: {
+        agentId,
+        contextIndex
+      }
+    });
+  };
+
   return (
     <div className="h-screen flex flex-col">
       <CommandBar
@@ -193,61 +222,71 @@ export function ModernUI() {
         isConnected={isConnected}
         onCommand={sendCommand}
         agents={agents}
+        onCharacterSelect={setSelectedCharacter}
       />
 
-      <PanelGroup direction="vertical" className="flex-1">
-        <Panel defaultSize={85} minSize={50}>
-          <PanelGroup direction="horizontal">
-            <Panel defaultSize={35} minSize={20} maxSize={40}>
-              <AgentNetwork
-                agents={agents}
-                rooms={rooms}
-                relationships={
-                  useSimulationStore.getState().relationships || []
-                }
-                selectedAgent={selectedAgent}
-                selectedRoom={selectedRoom}
-                onNodeSelect={(nodeType, id) => {
-                  if (nodeType === "agent") {
-                    useSimulationStore.getState().setSelectedAgent(id);
-                    useSimulationStore.getState().setSelectedRoom(null);
-                  } else {
-                    useSimulationStore.getState().setSelectedRoom(id);
-                    useSimulationStore.getState().setSelectedAgent(null);
+      {selectedCharacter ? (
+        <CharacterDetails
+          agentId={selectedCharacter}
+          onClose={() => setSelectedCharacter(null)}
+        />
+      ) : (
+        <PanelGroup direction="vertical" className="flex-1">
+          <Panel defaultSize={85} minSize={50}>
+            <PanelGroup direction="horizontal">
+              <Panel defaultSize={35} minSize={20} maxSize={40}>
+                <AgentNetwork
+                  agents={agents}
+                  rooms={rooms}
+                  relationships={
+                    useSimulationStore.getState().relationships || []
                   }
-                }}
-              />
-            </Panel>
+                  selectedAgent={selectedAgent}
+                  selectedRoom={selectedRoom}
+                  onNodeSelect={(nodeType, id) => {
+                    if (nodeType === "agent") {
+                      useSimulationStore.getState().setSelectedAgent(id);
+                      useSimulationStore.getState().setSelectedRoom(null);
+                    } else {
+                      useSimulationStore.getState().setSelectedRoom(id);
+                      useSimulationStore.getState().setSelectedAgent(null);
+                    }
+                  }}
+                />
+              </Panel>
 
-            <PanelResizeHandle className="w-1 bg-cyan-900/30 hover:bg-cyan-500/50 transition-colors" />
+              <PanelResizeHandle className="w-1 bg-cyan-900/30 hover:bg-cyan-500/50 transition-colors" />
 
-            <Panel defaultSize={40} minSize={30}>
-              <ChatInterface
-                selectedAgent={selectedAgent}
-                selectedRoom={selectedRoom}
-                agents={agents}
-                rooms={rooms}
-                logs={logs}
-                onSendMessage={(message, room) =>
-                  wsRef.current?.sendChat(message, room)
-                }
-              />
-            </Panel>
+              <Panel defaultSize={40} minSize={30}>
+                <ChatInterface
+                  selectedAgent={selectedAgent}
+                  selectedRoom={selectedRoom}
+                  agents={agents}
+                  rooms={rooms}
+                  logs={logs}
+                  onSendMessage={(message, room) =>
+                    wsRef.current?.sendChat(message, room)
+                  }
+                />
+              </Panel>
 
-            <PanelResizeHandle className="w-1 bg-cyan-900/30 hover:bg-cyan-500/50 transition-colors" />
+              <PanelResizeHandle className="w-1 bg-cyan-900/30 hover:bg-cyan-500/50 transition-colors" />
 
-            <Panel defaultSize={25} minSize={20}>
-              <Inspector
-                selectedAgent={selectedAgent}
-                selectedRoom={selectedRoom}
-                agents={agents}
-                rooms={rooms}
-                logs={logs}
-              />
-            </Panel>
-          </PanelGroup>
-        </Panel>
-      </PanelGroup>
+              <Panel defaultSize={25} minSize={20}>
+                <Inspector
+                  selectedAgent={selectedAgent}
+                  selectedRoom={selectedRoom}
+                  agents={agents}
+                  rooms={rooms}
+                  logs={logs}
+                  onDeleteMemory={handleDeleteMemory}
+                  onDeleteContext={handleDeleteContext}
+                />
+              </Panel>
+            </PanelGroup>
+          </Panel>
+        </PanelGroup>
+      )}
     </div>
   );
 }
