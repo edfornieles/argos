@@ -373,4 +373,20 @@ export class WebSocketService {
       }
     }
   }
+
+  spawnAgent(data: {
+    name: string;
+    role: string;
+    systemPrompt: string;
+    appearance?: string;
+    tools?: string[];
+    platform?: string;
+    initialGoals?: string[];
+  }) {
+    this.send({
+      type: "SPAWN_AGENT",
+      data,
+      timestamp: Date.now(),
+    });
+  }
 }

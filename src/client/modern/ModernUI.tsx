@@ -13,6 +13,7 @@ import {
   WorldState,
   RoomState,
   NetworkLink,
+  SpawnAgentMessage,
 } from "../../types";
 import { useSimulationStore } from "../../state/simulation";
 import { WebSocketService } from "../services/websocket";
@@ -185,6 +186,16 @@ export function ModernUI() {
         case "RESET":
           wsRef.current.resetSimulation();
           setIsRunning(false);
+          break;
+        default:
+          if (type.startsWith("SPAWN_AGENT")) {
+            try {
+              const agentConfig = JSON.parse(type.replace("SPAWN_AGENT", "").trim());
+              wsRef.current.spawnAgent(agentConfig);
+            } catch (e) {
+              console.error("Invalid agent configuration:", e);
+            }
+          }
           break;
       }
     }

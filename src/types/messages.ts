@@ -18,7 +18,8 @@ export type MessageType =
   | "UNSUBSCRIBE_AGENT"
   | "CONNECTION_UPDATE"
   | "DELETE_MEMORY"
-  | "DELETE_CONTEXT";
+  | "DELETE_CONTEXT"
+  | "SPAWN_AGENT";
 
 // Base Message Structure
 export interface BaseMessage {
@@ -131,4 +132,19 @@ export type ClientMessage =
   | ChatMessage 
   | ControlMessage 
   | DeleteMemoryMessage 
-  | DeleteContextMessage;
+  | DeleteContextMessage
+  | SpawnAgentMessage;
+
+// Spawn Agent Message
+export interface SpawnAgentMessage extends BaseMessage {
+  type: "SPAWN_AGENT";
+  data: {
+    name: string;
+    role: string;
+    systemPrompt: string;
+    appearance?: string;
+    tools?: string[];
+    platform?: string;
+    initialGoals?: string[];
+  };
+}

@@ -24,3 +24,8 @@
 - [ ] Add user preferences and settings
 - [ ] Create documentation
 - [ ] Add tests
+
+## UI Components
+- [x] Create SpawnAgentButton component for spawning new agents
+- [ ] Add SpawnAgentButton to relevant UI sections
+- [ ] Add customization options for agent properties in SpawnAgentButton

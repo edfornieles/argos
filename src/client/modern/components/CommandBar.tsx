@@ -17,6 +17,7 @@ export function CommandBar({
   onCharacterSelect,
 }: CommandBarProps) {
   const [elapsedTime, setElapsedTime] = React.useState(0);
+  const [command, setCommand] = React.useState("");
 
   React.useEffect(() => {
     if (!isRunning) {
@@ -43,6 +44,22 @@ export function CommandBar({
     return `${h.toString().padStart(2, "0")}:${m
       .toString()
       .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const handleCommandSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!command.trim()) return;
+
+    const cmd = command.trim().toUpperCase();
+    if (["START", "STOP", "RESET"].includes(cmd)) {
+      onCommand(cmd);
+    } else if (cmd.startsWith("SPAWN_AGENT")) {
+      onCommand(cmd);
+    } else {
+      // Handle other commands here
+      console.log("Unknown command:", cmd);
+    }
+    setCommand("");
   };
 
   return (
@@ -93,13 +110,15 @@ export function CommandBar({
       </div>
 
       {/* Center: Search */}
-      <div className="flex-1 max-w-xl mx-4">
+      <form onSubmit={handleCommandSubmit} className="flex-1 max-w-xl mx-4">
         <input
           type="text"
+          value={command}
+          onChange={(e) => setCommand(e.target.value)}
           placeholder="Search agents, events, or use commands..."
           className="w-full px-3 py-1 rounded font-mono text-sm bg-black/30 text-cyan-400 border border-cyan-900/50 focus:outline-none focus:border-cyan-500"
         />
-      </div>
+      </form>
 
       {/* Right: Status */}
       <div className="flex items-center space-x-4">
