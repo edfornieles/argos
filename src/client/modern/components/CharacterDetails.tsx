@@ -26,7 +26,7 @@ export function CharacterDetails({ agentId, onClose }: CharacterDetailsProps) {
 
   // Limit recent thoughts to five and update on new data
   const recentThoughts = Array.isArray((agent as any).thoughtChain)
-    ? (agent as any).thoughtChain.filter((thought: any) => thought.type === 'thought').slice(0, 5)
+    ? (agent as any).thoughtChain.filter((thought: any) => thought.type === 'thought').slice(-5).reverse()
     : [];
 
   // Ensure three goals are shown
